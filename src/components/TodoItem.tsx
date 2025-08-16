@@ -28,6 +28,13 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onUpdate, onDelete 
     }
   };
 
+  const formatCategory = (category: string | null | undefined) => {
+    if (!category) return '미분류';
+    return category.replace(/_/g, ' ').toLowerCase().split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   return (
     <div className="todo-item">
       <div className="todo-content">
@@ -38,24 +45,29 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onUpdate, onDelete 
           className="todo-checkbox"
         />
         
-        {isEditing ? (
-          <input
-            type="text"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={handleEdit}
-            onKeyDown={handleKeyPress}
-            className="todo-edit-input"
-            autoFocus
-          />
-        ) : (
-          <span
-            className={`todo-description ${todo.completed ? 'completed' : ''}`}
-            onDoubleClick={() => setIsEditing(true)}
-          >
-            {todo.description}
+        <div className="todo-text">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleEdit}
+              onKeyDown={handleKeyPress}
+              className="todo-edit-input"
+              autoFocus
+            />
+          ) : (
+            <span
+              className={`todo-description ${todo.completed ? 'completed' : ''}`}
+              onDoubleClick={() => setIsEditing(true)}
+            >
+              {todo.description}
+            </span>
+          )}
+          <span className="todo-category">
+            {formatCategory(todo.category)}
           </span>
-        )}
+        </div>
       </div>
       
       <div className="todo-actions">

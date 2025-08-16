@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import TodoForm from './components/TodoForm';
 import TodoList from './components/TodoList';
 import todoApi from './services/todoApi';
-import type { Todo } from './types/todo';
+import type { Todo } from './types/todo'; // Todo는 타입으로 임포트
+import { TodoCategory } from './types/todo'; // TodoCategory는 값으로 임포트
 import './App.css';
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<TodoCategory[]>([]);
 
   // 모든 Todo 조회
   const fetchTodos = async () => {
     try {
       setLoading(true);
-      const data = await todoApi.getAllTodos();
+      // selectedCategories 배열을 getAllTodos에 전달
+      const data = await todoApi.getAllTodos(selectedCategories);
       console.log('Fetched todos:', data);
       console.log('First todo structure:', data[0]);
       setTodos(data);
@@ -28,11 +31,12 @@ function App() {
   };
 
   // Todo 추가
-  const handleAddTodo = async (description: string) => {
+  const handleAddTodo = async (description: string, category: TodoCategory) => {
     try {
       const newTodo = await todoApi.createTodo({
         description,
-        completed: false
+        completed: false,
+        category: category
       });
       setTodos(prev => [...prev, newTodo]);
     } catch (err) {
@@ -64,6 +68,7 @@ function App() {
   // Todo 수정
   const handleUpdateTodo = async (id: number, description: string) => {
     try {
+      // Todo 수정 시 카테고리도 함께 수정할 수 있도록 로직 추가 (필요 시)
       const updatedTodo = await todoApi.updateTodo(id, { description });
       setTodos(prev => 
         prev.map(todo => 
@@ -87,9 +92,18 @@ function App() {
     }
   };
 
+  // 카테고리 선택/해제 토글 함수
+  const handleCategoryChange = (category: TodoCategory) => {
+    setSelectedCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category) // 이미 선택된 카테고리이면 제거
+        : [...prev, category] // 아니면 추가
+    );
+  };
+
   useEffect(() => {
     fetchTodos();
-  }, []);
+  }, [selectedCategories]); // selectedCategories 변경 시 fetchTodos 재실행
 
   const completedCount = todos.filter(todo => todo.completed).length;
   const totalCount = todos.length;
@@ -112,6 +126,22 @@ function App() {
         )}
 
         <TodoForm onAdd={handleAddTodo} />
+
+        {/* 카테고리 필터링 UI */}
+        <div className="category-filters">
+          <h3>카테고리 필터</h3>
+          <div className="category-buttons">
+            {Object.values(TodoCategory).map(category => (
+              <button
+                key={category}
+                onClick={() => handleCategoryChange(category)}
+                className={selectedCategories.includes(category) ? 'active' : ''}
+              >
+                {category.replace(/_/g, ' ').toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {loading ? (
           <div className="loading">

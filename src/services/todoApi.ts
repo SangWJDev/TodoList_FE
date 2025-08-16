@@ -1,12 +1,15 @@
 import axios from 'axios';
-import type { Todo, CreateTodoRequest, UpdateTodoRequest } from '../types/todo';
+import type { Todo, CreateTodoRequest, UpdateTodoRequest, TodoCategory } from '../types/todo';
 
-const API_BASE_URL = 'http://localhost:8080/api/todo';
+const API_BASE_URL = 'http://localhost:8080/api/todos';
 
 const todoApi = {
-  // 모든 Todo 조회
-  getAllTodos: async (): Promise<Todo[]> => {
-    const response = await axios.get(API_BASE_URL);
+  getAllTodos: async (categories?: TodoCategory[]): Promise<Todo[]> => {
+    const params = new URLSearchParams();
+    if (categories && categories.length > 0) {
+      categories.forEach(category => params.append('category', category));
+    }
+    const response = await axios.get(`${API_BASE_URL}?${params.toString()}`);
     return response.data;
   },
 
@@ -30,7 +33,7 @@ const todoApi = {
 
   // Todo 완료 상태 토글
   toggleComplete: async (id: number): Promise<Todo> => {
-    const response = await axios.patch(`${API_BASE_URL}/complete/${id}`);
+    const response = await axios.patch(`${API_BASE_URL}/${id}/completed`); // 경로 수정
     return response.data;
   },
 
